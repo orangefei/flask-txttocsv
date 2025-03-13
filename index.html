@@ -1,0 +1,285 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TXT转CSV转换器</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 2rem;
+            background-color: #f8f9fa;
+            padding-bottom: 2rem;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .progress {
+            height: 25px;
+        }
+        .hidden {
+            display: none;
+        }
+        .result-box {
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #e9ecef;
+            margin-top: 20px;
+        }
+        .settings-section {
+            border-top: 1px solid #dee2e6;
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+        .info-icon {
+            cursor: pointer;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">TXT转CSV转换器</h1>
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">上传文件</h5>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="fileInput" class="form-label">选择TXT文件</label>
+                        <input type="file" class="form-control" id="fileInput" name="file" accept=".txt" required>
+                    </div>
+                    
+                    <div class="mb-4 settings-section">
+                        <label class="form-label fw-bold">分隔符选项</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="delimiterOption" id="commaRadio" value="comma" checked>
+                            <label class="form-check-label" for="commaRadio">逗号 (,)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="delimiterOption" id="tabRadio" value="tab">
+                            <label class="form-check-label" for="tabRadio">制表符 (Tab)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="delimiterOption" id="spaceRadio" value="space">
+                            <label class="form-check-label" for="spaceRadio">空格</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="delimiterOption" id="otherRadio" value="other">
+                            <label class="form-check-label" for="otherRadio">其他</label>
+                            <input type="text" class="form-control form-control-sm mt-1" id="customDelimiter" placeholder="输入自定义分隔符" style="width: 200px;">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4 settings-section">
+                        <label class="form-label fw-bold">输出编码选项</label>
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="form-check me-4">
+                                <input class="form-check-input" type="radio" name="encodingOption" id="utf8Radio" value="utf-8" checked>
+                                <label class="form-check-label" for="utf8Radio">UTF-8</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="encodingOption" id="gbkRadio" value="gbk">
+                                <label class="form-check-label" for="gbkRadio">GBK</label>
+                            </div>
+                            <span class="ms-2 info-icon" data-bs-toggle="tooltip" title="UTF-8适用于大多数应用和系统，GBK适用于中文Windows系统下的Excel等应用">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle" viewBox="0 0 16 16">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                    <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="alert alert-info py-2" role="alert">
+                            <small>
+                                <strong>编码说明：</strong> 在中文Windows环境下，Excel打开CSV文件默认使用GBK编码。如果您的CSV文件将在Excel中使用，并且包含中文字符，推荐选择GBK编码。
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">开始转换</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 处理状态 -->
+        <div id="progressCard" class="card hidden">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">处理中</h5>
+            </div>
+            <div class="card-body">
+                <div class="progress mb-3">
+                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                </div>
+                <p id="statusText" class="text-center">正在处理文件...</p>
+            </div>
+        </div>
+        
+        <!-- 转换结果 -->
+        <div id="resultCard" class="card hidden">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">转换成功</h5>
+            </div>
+            <div class="card-body">
+                <div id="resultBox" class="result-box">
+                    <p id="resultMessage" class="mb-3"></p>
+                    <p id="encodingInfo" class="mb-3 fw-bold"></p>
+                    <div class="d-grid">
+                        <button id="downloadBtn" class="btn btn-success">下载CSV文件</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 错误信息 -->
+        <div id="errorCard" class="card hidden">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">转换失败</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger mb-0">
+                    <p id="errorMessage"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadForm = document.getElementById('uploadForm');
+            const fileInput = document.getElementById('fileInput');
+            const progressCard = document.getElementById('progressCard');
+            const progressBar = document.getElementById('progressBar');
+            const statusText = document.getElementById('statusText');
+            const resultCard = document.getElementById('resultCard');
+            const resultMessage = document.getElementById('resultMessage');
+            const encodingInfo = document.getElementById('encodingInfo');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const errorCard = document.getElementById('errorCard');
+            const errorMessage = document.getElementById('errorMessage');
+            const customDelimiter = document.getElementById('customDelimiter');
+            const otherRadio = document.getElementById('otherRadio');
+            
+            // 初始化工具提示
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+            
+            // 自定义分隔符输入框事件
+            customDelimiter.addEventListener('focus', function() {
+                otherRadio.checked = true;
+            });
+            
+            // 文件上传表单提交处理
+            uploadForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // 检查文件是否已选择
+                if (!fileInput.files[0]) {
+                    showError('请选择要转换的TXT文件');
+                    return;
+                }
+                
+                // 获取选择的分隔符
+                let delimiter = ',';
+                const delimiterOption = document.querySelector('input[name="delimiterOption"]:checked').value;
+                
+                if (delimiterOption === 'comma') {
+                    delimiter = ',';
+                } else if (delimiterOption === 'tab') {
+                    delimiter = '\t';
+                } else if (delimiterOption === 'space') {
+                    delimiter = ' ';
+                } else if (delimiterOption === 'other') {
+                    if (customDelimiter.value.trim() === '') {
+                        showError('请输入自定义分隔符');
+                        return;
+                    }
+                    delimiter = customDelimiter.value;
+                }
+                
+                // 获取选择的编码格式
+                const encoding = document.querySelector('input[name="encodingOption"]:checked').value;
+                
+                // 创建FormData对象
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('delimiter', delimiter);
+                formData.append('encoding', encoding);
+                
+                // 显示进度条
+                progressCard.classList.remove('hidden');
+                resultCard.classList.add('hidden');
+                errorCard.classList.add('hidden');
+                
+                // 模拟进度，实际上后端没有实时进度反馈
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 5;
+                    if (progress >= 90) {
+                        clearInterval(progressInterval);
+                    }
+                    progressBar.style.width = `${progress}%`;
+                    progressBar.setAttribute('aria-valuenow', progress);
+                }, 300);
+                
+                // 发送AJAX请求
+                fetch('/api/convert', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    clearInterval(progressInterval);
+                    
+                    if (data.error) {
+                        showError(data.error);
+                        return;
+                    }
+                    
+                    // 转换成功
+                    progressBar.style.width = '100%';
+                    progressBar.setAttribute('aria-valuenow', 100);
+                    
+                    setTimeout(() => {
+                        progressCard.classList.add('hidden');
+                        resultCard.classList.remove('hidden');
+                        resultMessage.textContent = data.message;
+                        
+                        // 显示编码信息
+                        const encodingDisplay = data.encoding === 'utf-8' ? 'UTF-8' : 'GBK';
+                        encodingInfo.textContent = `文件编码: ${encodingDisplay}`;
+                        
+                        // 设置下载按钮
+                        downloadBtn.onclick = function() {
+                            window.location.href = `/api/download/${data.filename}`;
+                        };
+                    }, 500);
+                })
+                .catch(error => {
+                    clearInterval(progressInterval);
+                    showError('转换过程中发生错误: ' + error.message);
+                });
+            });
+            
+            // 显示错误信息
+            function showError(message) {
+                progressCard.classList.add('hidden');
+                resultCard.classList.add('hidden');
+                errorCard.classList.remove('hidden');
+                errorMessage.textContent = message;
+            }
+        });
+    </script>
+</body>
+</html>
